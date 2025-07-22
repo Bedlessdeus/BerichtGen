@@ -41,12 +41,22 @@
   function formatDateToISO(dateStr: string): string {
     const date = parseDateFromGerman(dateStr);
     if (!date) return dateStr;
-    return date.toISOString().split('T')[0];
+    // Use UTC to avoid timezone offset issues
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   function formatDateFromISO(isoStr: string): string {
     if (!isoStr) return '';
-    const date = new Date(isoStr);
+    // Parse ISO date without timezone conversion
+    const parts = isoStr.split('-');
+    if (parts.length !== 3) return isoStr;
+    const year = parseInt(parts[0]);
+    const month = parseInt(parts[1]) - 1;
+    const day = parseInt(parts[2]);
+    const date = new Date(year, month, day);
     return formatDateToGerman(date);
   }
 
@@ -135,16 +145,15 @@
       }}
     >
       <div class="form-group">
-        <label class="form-label" for="{weekday}-date">Date (DD.MM.YYYY):</label>
+        <label class="form-label" for="{weekday}-date">Date:</label>
         <input
           class="form-input"
           id="{weekday}-date"
           type="text"
           bind:value={formData.date}
-          placeholder="DD.MM.YYYY"
-          pattern="^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.\d{4}$"
           title="Please enter date in DD.MM.YYYY format"
           required
+          disabled
         />
       </div>
 

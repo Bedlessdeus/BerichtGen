@@ -17,6 +17,7 @@
   import DayEntry from "../lib/DayEntry.svelte";
   import "../app.css";
   import PdfGen from "$lib/PDFGen.svelte";
+  import { getWorkWeekDateRange } from "$lib/util.js";
 
   let availableWeeks = $state<Array<{ year: number; week: number }>>([]);
   let selectedWeekIndex = $state(0);
@@ -86,33 +87,6 @@
     isConfigOpen.set(true);
   }
 
-  $effect(() => {
-    if ($currentWeek) {
-      loadWeekData($currentWeek.year, $currentWeek.week);
-    }
-  });
-
-  function getWeekDateRange(year: number, week: number): string {
-    const jan4 = new Date(year, 0, 4);
-    const jan4Day = jan4.getDay() || 7;
-    const mondayOfWeek1 = new Date(jan4);
-    mondayOfWeek1.setDate(jan4.getDate() - jan4Day + 1);
-    
-    const targetMonday = new Date(mondayOfWeek1);
-    targetMonday.setDate(mondayOfWeek1.getDate() + (week - 1) * 7);
-    
-    const friday = new Date(targetMonday);
-    friday.setDate(targetMonday.getDate() + 4);
-    
-    return `${targetMonday.toLocaleDateString('de-DE', {
-      day: '2-digit',
-      month: '2-digit'
-    })} - ${friday.toLocaleDateString('de-DE', {
-      day: '2-digit',
-      month: '2-digit'
-    })}`;
-  }
-
   const currentWeekInfo = $derived(availableWeeks[selectedWeekIndex]);
 </script>
 
@@ -143,7 +117,7 @@
           Calendar Week {currentWeekInfo.week} - {currentWeekInfo.year}
         </h2>
         <h3 class="week-subtitle">
-          {getWeekDateRange(currentWeekInfo.year, currentWeekInfo.week)}
+          {getWorkWeekDateRange(currentWeekInfo.year, currentWeekInfo.week)}
         </h3>
 
         <div class="flex flex-col sm:flex-row gap-2">
@@ -209,7 +183,10 @@
   {#if showPdfPreview && currentWeekInfo}
     <PdfGen
       weekData={$currentWeekData}
-      onClose={() => (showPdfPreview = false)}
+      onClose={() => {
+        console.log("PDF preview closed");
+        showPdfPreview = false;
+      }}
     />
   {/if}
 </main>

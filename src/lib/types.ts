@@ -7,7 +7,7 @@ export interface Config {
 
 export interface DayEntry {
   date: string;
-  area: string;
+  area: AreaType;
   notes: string;
 }
 
@@ -21,3 +21,4 @@ export type Weekday = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday'
 
 export const WEEKDAYS: Weekday[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 export const AREAS = ['Department', 'School', 'Seminar'] as const;
+export type AreaType = typeof AREAS[number];

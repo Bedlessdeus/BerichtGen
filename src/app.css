@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-/* Custom component classes for Berichtsheft Manager */
 @layer components {
   .btn-primary {
     @apply bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed;
@@ -122,12 +121,12 @@
 }
 
 .success-code {
-  @apply bg-black opacity-10 dark:bg-white dark:opacity-10 px-2 py-1 rounded font-mono text-xs break-all;
+  @apply bg-black/10 dark:bg-white px-2 py-1 rounded font-mono text-xs break-all;
 }
 
 /* Modal styles */
 .modal-overlay {
-  @apply fixed inset-0 bg-black opacity-50 flex items-center justify-center z-50;
+  @apply fixed inset-0 bg-black/50 flex items-center justify-center z-50;
 }
 
 .modal-content {

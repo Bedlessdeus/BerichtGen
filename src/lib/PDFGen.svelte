@@ -1,7 +1,14 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { config } from './store.js';
-  import { WEEKDAYS, type WeekData, type DayEntry } from './types.js';
+  import { formatDateToGerman, getWorkWeekDateRange } from "./util";
+  import { onMount } from "svelte";
+  import { config } from "./store";
+  import Printd from "printd";
+  import {
+    WEEKDAYS,
+    type WeekData,
+    type DayEntry,
+    type AreaType,
+  } from "./types";
 
   interface Props {
     weekData: WeekData;
@@ -11,204 +18,17 @@
   let { weekData, onClose }: Props = $props();
 
   let printContainer: HTMLElement;
-
-  function formatDate(dateString: string): string {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  }
-
-  function getWeekDateRange(year: number, week: number): string {
-    const jan4 = new Date(year, 0, 4);
-    const jan4Day = jan4.getDay() || 7;
-    const mondayOfWeek1 = new Date(jan4);
-    mondayOfWeek1.setDate(jan4.getDate() - jan4Day + 1);
-    
-    const targetMonday = new Date(mondayOfWeek1);
-    targetMonday.setDate(mondayOfWeek1.getDate() + (week - 1) * 7);
-    
-    const friday = new Date(targetMonday);
-    friday.setDate(targetMonday.getDate() + 4);
-    
-    return `${targetMonday.toLocaleDateString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    })} - ${friday.toLocaleDateString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    })}`;
-  }
+  let weekMap = $state<Partial<Record<AreaType, DayEntry[]>>>({});
 
   function handlePrint() {
-    // Create a new window for printing
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    window.print();
+    const printWindow = window.open("", "_blank", "width=800,height=600");
     if (!printWindow) return;
-    
     const printContent = printContainer.innerHTML;
-    
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Berichtsheft KW ${weekData.week}/${weekData.year}</title>
-          <style>
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            
-            body {
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              font-size: 12pt;
-              line-height: 1.4;
-              color: #000;
-              background: white;
-              padding: 20mm;
-            }
-            
-            .print-header {
-              text-align: center;
-              margin-bottom: 30px;
-              border-bottom: 2px solid #333;
-              padding-bottom: 20px;
-            }
-            
-            .print-title {
-              font-size: 24pt;
-              font-weight: bold;
-              margin-bottom: 10px;
-            }
-            
-            .print-subtitle {
-              font-size: 14pt;
-              color: #666;
-              margin-bottom: 5px;
-            }
-            
-            .company-info {
-              margin-bottom: 30px;
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 20px;
-            }
-            
-            .info-section h3 {
-              font-size: 14pt;
-              margin-bottom: 10px;
-              color: #333;
-              border-bottom: 1px solid #ccc;
-              padding-bottom: 5px;
-            }
-            
-            .info-item {
-              margin-bottom: 8px;
-            }
-            
-            .info-label {
-              font-weight: bold;
-              display: inline-block;
-              width: 120px;
-            }
-            
-            .days-container {
-              margin-top: 30px;
-            }
-            
-            .day-section {
-              margin-bottom: 40px;
-              break-inside: avoid;
-            }
-            
-            .day-header {
-              background-color: #f5f5f5;
-              padding: 10px 15px;
-              border-left: 4px solid #007acc;
-              margin-bottom: 15px;
-            }
-            
-            .day-title {
-              font-size: 16pt;
-              font-weight: bold;
-              color: #333;
-            }
-            
-            .day-content {
-              margin-left: 20px;
-            }
-            
-            .field-row {
-              margin-bottom: 12px;
-              display: flex;
-              align-items: flex-start;
-            }
-            
-            .field-label {
-              font-weight: bold;
-              width: 100px;
-              color: #555;
-              flex-shrink: 0;
-            }
-            
-            .field-value {
-              flex: 1;
-            }
-            
-            .notes-content {
-              background-color: #fafafa;
-              padding: 15px;
-              border-left: 3px solid #007acc;
-              white-space: pre-wrap;
-              font-family: 'Segoe UI', sans-serif;
-              margin-top: 5px;
-              border-radius: 0 4px 4px 0;
-            }
-            
-            .no-entry {
-              color: #999;
-              font-style: italic;
-              margin-left: 20px;
-            }
-            
-            .footer {
-              margin-top: 50px;
-              text-align: center;
-              font-size: 10pt;
-              color: #666;
-              border-top: 1px solid #ccc;
-              padding-top: 20px;
-            }
-            
-            @media print {
-              body {
-                padding: 15mm;
-              }
-              
-              .day-section {
-                page-break-inside: avoid;
-              }
-              
-              .print-header {
-                page-break-after: avoid;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          ${printContent}
-        </body>
-      </html>
-    `);
-    
+    printWindow.document.write(`${printContent}`);
     printWindow.document.close();
     printWindow.focus();
-    
+
     setTimeout(() => {
       printWindow.print();
       printWindow.close();
@@ -216,41 +36,124 @@
   }
 
   function handleSavePDF() {
-    handlePrint();
+    openPrintWindow();
+  }
+
+  function openPrintWindow() {
+    /*const printWindow = window.open("", "_blank", "width=800,height=600");
+    if (!printWindow) return;
+
+    const printContent = generatePrintHTML();
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);*/
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = generatePrintHTML();
+    new Printd().print(tempDiv);
+  }
+
+  function generatePrintHTML(): string {
+    const content = printContainer.innerHTML;
+    
+    const existingStyles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+      .map(el => {
+        if (el.tagName === 'LINK') {
+          return `<link rel="stylesheet" href="${(el as HTMLLinkElement).href}">`;
+        } else {
+          return `<style>${(el as HTMLStyleElement).innerHTML}</style>`;
+        }
+      })
+      .join('\n    ');
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Berichtsheft KW ${weekData.week}/${weekData.year}</title>
+          <meta charset="utf-8">
+          ${existingStyles}
+          <style>
+            /* Print-specific overrides */
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+              font-size: 12pt !important;
+              line-height: 1.4 !important;
+              color: #000 !important;
+              background: white !important;
+              padding: 20mm !important;
+            }
+            
+            @media print {
+              body {
+                padding: 15mm !important;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          ${content}
+        </body>
+      </html>
+    `;
   }
 
   onMount(() => {
     const handleKeydown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "p") {
         e.preventDefault();
         handlePrint();
       }
     };
-    
-    document.addEventListener('keydown', handleKeydown);
-    
+
+    document.addEventListener("keydown", handleKeydown);
+
     return () => {
-      document.removeEventListener('keydown', handleKeydown);
+      document.removeEventListener("keydown", handleKeydown);
     };
+  });
+
+  $effect(() => {
+    const newWeekMap: Partial<Record<AreaType, DayEntry[]>> = {};
+    for (const day of WEEKDAYS) {
+      const entry = weekData.entries[day];
+      if (entry) {
+        if (!newWeekMap[entry.area]) {
+          newWeekMap[entry.area] = [];
+        }
+        newWeekMap[entry.area]!.push(entry);
+      }
+    }
+    weekMap = newWeekMap;
   });
 </script>
 
-<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-  <div class="bg-white dark:bg-gray-800 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+<div
+  class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+>
+  <div
+    class="bg-white dark:bg-gray-800 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+  >
     <!-- Header -->
-    <div class="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
+    <div
+      class="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700"
+    >
       <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
         Berichtsheft Preview - KW {weekData.week}/{weekData.year}
       </h2>
       <div class="flex gap-3">
-        <button 
+        <button
           class="btn-success"
           onclick={handleSavePDF}
-          title="Print/Save as PDF (Ctrl+P)"
+          title="Open print window - use 'Save as PDF' in print dialog"
         >
           📄 Print/Save PDF
         </button>
-        <button 
+        <button
           class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl w-8 h-8 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
           onclick={onClose}
         >
@@ -260,104 +163,144 @@
     </div>
 
     <!-- Preview Content -->
-    <div class="flex-1 overflow-auto p-6">
+    <div class="flex-1 overflow-auto p-6 bg-white !text-black">
       <div bind:this={printContainer} class="max-w-none">
         <!-- Print Header -->
-        <div class="print-header">
-          <h1 class="print-title">BERICHTSHEFT</h1>
-          <div class="print-subtitle">Kalenderwoche {weekData.week} • {weekData.year}</div>
-          <div class="print-subtitle">{getWeekDateRange(weekData.year, weekData.week)}</div>
+        <div class="text-center mb-8 pb-6 border-b-2 border-gray-300">
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">
+            Ausbildungsnachweis
+          </h1>
+          <p class="text-lg text-gray-600">
+            Kalenderwoche {weekData.week}/{weekData.year}
+          </p>
         </div>
 
-        <!-- Company Info -->
-        <div class="company-info">
-          <div class="info-section">
-            <h3>Persönliche Angaben</h3>
-            <div class="info-item">
-              <span class="info-label">Auszubildende/r:</span>
-              <span>{$config.trainee_name || 'Nicht angegeben'}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Abteilung:</span>
-              <span>{$config.department_name || 'Nicht angegeben'}</span>
-            </div>
-          </div>
-          <div class="info-section">
-            <h3>Unternehmen</h3>
-            <div class="info-item">
-              <span class="info-label">Firma:</span>
-              <span>{$config.company_name || 'Nicht angegeben'}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Kalenderwoche:</span>
-              <span>{weekData.week}/{weekData.year}</span>
-            </div>
-          </div>
+        <!-- Info Table -->
+        <div class="mb-8">
+          <table class="w-full">
+            <thead>
+              <tr class="text-left">
+                <th class="px-4 py-3 font-semibold text-gray-700"
+                  >GB/Werk/Abt</th
+                >
+                <th class="px-4 py-3 font-semibold text-gray-700">Von</th>
+                <th class="px-4 py-3 font-semibold text-gray-700">Bis</th>
+                <th class="px-4 py-3 font-semibold text-gray-700">Name</th>
+                <th class="px-4 py-3 font-semibold text-gray-700">Datum</th>
+                <th class="px-4 py-3 font-semibold text-gray-700"
+                  >Nachweis-Nr.</th
+                >
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="bg-gray-100">
+                <td class="px-4 py-3 font-medium"
+                  >{$config.department_name || "Nicht angegeben"}</td
+                >
+                <td class="px-4 py-3 font-medium"
+                  >{getWorkWeekDateRange(
+                    weekData.year,
+                    weekData.week
+                  ).startToString()}</td
+                >
+                <td class="px-4 py-3 font-medium"
+                  >{getWorkWeekDateRange(
+                    weekData.year,
+                    weekData.week
+                  ).endToString()}</td
+                >
+                <td class="px-4 py-3 font-medium"
+                  >{$config.trainee_name || "Nicht angegeben"}</td
+                >
+                <td class="px-4 py-3 font-medium"
+                  >{new Date().toLocaleDateString("de-DE", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}</td
+                >
+                <td class="px-4 py-3 font-medium">{weekData.week}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <!-- Days -->
-        <div class="days-container">
-          {#each WEEKDAYS as weekday, index}
-            {@const entry = weekData.entries[weekday]}
-            {@const dayNames = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag']}
-            
-            <div class="day-section">
-              <div class="day-header">
-                <div class="day-title">{dayNames[index]}</div>
-              </div>
-              
-              {#if entry}
-                <div class="day-content">
-                  <div class="field-row">
-                    <span class="field-label">Datum:</span>
-                    <span class="field-value">{formatDate(entry.date)}</span>
-                  </div>
-                  
-                  <div class="field-row">
-                    <span class="field-label">Bereich:</span>
-                    <span class="field-value">{entry.area}</span>
-                  </div>
-                  
-                  <div class="field-row">
-                    <span class="field-label">Tätigkeiten:</span>
-                    <div class="field-value">
-                      <div class="notes-content">{entry.notes}</div>
+        <div class="space-y-6 mb-12">
+          {#each Object.entries(weekMap) as [area, entries]}
+            <div>
+              <h3
+                class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-blue-500"
+              >
+                {area}
+              </h3>
+              <div class="space-y-3">
+                {#each entries as entry}
+                  <div class="p-4">
+                    <div class="flex justify-between items-center mb-3">
+                      <h4 class="font-semibold text-gray-800">
+                        {new Date(entry.date).toLocaleDateString("de-DE", {
+                          weekday: "long",
+                        })}
+                      </h4>
+                      <span class="text-sm font-medium text-gray-600">
+                        {formatDateToGerman(entry.date)}
+                      </span>
+                    </div>
+                    <div class="text-gray-700 leading-relaxed">
+                      <p class="whitespace-pre-wrap">{entry.notes}</p>
                     </div>
                   </div>
-                </div>
-              {:else}
-                <div class="no-entry">Keine Einträge für diesen Tag</div>
-              {/if}
+                {/each}
+              </div>
             </div>
           {/each}
         </div>
 
-        <!-- Footer -->
-        <div class="footer">
-          <p>Erstellt am: {new Date().toLocaleDateString('de-DE', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })}</p>
-          <p>Berichtsheft-Manager • Kalenderwoche {weekData.week}/{weekData.year}</p>
+        <!-- Signature Section -->
+        <div class="mt-16">
+          <div class="bg-gray-100 p-8">
+            <div class="grid grid-cols-3 gap-16">
+              <div class="text-center">
+                <div class="h-16 mb-2"></div>
+                <div class="border-t border-gray-400 pt-2">
+                  <p class="text-sm font-medium text-gray-700">
+                    Unterschrift des Ausbildenden
+                  </p>
+                </div>
+              </div>
+              <div class="text-center">
+                <div class="h-16 mb-2"></div>
+                <div class="border-t border-gray-400 pt-2">
+                  <p class="text-sm font-medium text-gray-700">
+                    Unterschrift des Auszubildenden
+                  </p>
+                </div>
+              </div>
+              <div class="text-center">
+                <div class="h-16 mb-2"></div>
+                <div class="border-t border-gray-400 pt-2">
+                  <p class="text-sm font-medium text-gray-700">
+                    Unterschrift des gesetzlichen Vertreters
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Footer Actions -->
-    <div class="border-t border-gray-200 dark:border-gray-700 p-6 flex justify-between items-center">
+    <div
+      class="border-t border-gray-200 dark:border-gray-700 p-6 flex justify-between items-center"
+    >
       <div class="text-sm text-gray-600 dark:text-gray-400">
         Tipp: Verwenden Sie Strg+P zum schnellen Drucken
       </div>
       <div class="flex gap-3">
-        <button class="btn-secondary" onclick={onClose}>
-          Schließen
-        </button>
-        <button class="btn-primary" onclick={handlePrint}>
-          🖨️ Drucken
-        </button>
+        <button class="btn-secondary" onclick={onClose}> Schließen </button>
+        <button class="btn-primary" onclick={handlePrint}> 🖨️ Drucken </button>
       </div>
     </div>
   </div>
