@@ -3,6 +3,7 @@ export interface Config {
   department_name: string;
   company_name: string;
   output_directory: string;
+  start_date: string;
 }
 
 export interface DayEntry {

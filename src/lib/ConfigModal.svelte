@@ -1,10 +1,27 @@
 <script lang="ts">
   import { config, saveConfig, isConfigOpen } from '../lib/store.js';
+  import { open } from '@tauri-apps/plugin-dialog';
   import type { Config } from '../lib/types.js';
 
   let formData: Config = $state({ ...$config });
   let isSaving = $state(false);
   let saveMessage = $state('');
+
+  async function selectOutputDirectory() {
+    try {
+      const selected = await open({
+        directory: true,
+        multiple: false,
+        defaultPath: formData.output_directory || undefined,
+      });
+      
+      if (selected) {
+        formData.output_directory = selected;
+      }
+    } catch (error) {
+      console.error('Failed to select directory:', error);
+    }
+  }
 
   async function handleSave() {
     try {
@@ -41,8 +58,7 @@
   function handleContentKeyDown(event: KeyboardEvent) {
     event.stopPropagation();
   }
-
-  // Update form data when config changes
+  
   $effect(() => {
     formData = { ...$config };
   });
@@ -70,7 +86,7 @@
     >
       <div class="modal-header">
         <h2 class="modal-title" id="config-title">Configuration</h2>
-        <button class="modal-close" onclick={handleClose}>×</button>
+        <button class="modal-close" onclick={handleClose}>X</button>
       </div>
       
       <div class="modal-body">
@@ -113,13 +129,33 @@
 
           <div class="form-group">
             <label class="form-label" for="output-directory">Output Directory:</label>
+            <div class="flex gap-2">
+              <input
+                class="form-input flex-1"
+                id="output-directory"
+                type="text"
+                bind:value={formData.output_directory}
+                placeholder="Select output directory"
+                readonly
+              />
+              <button
+                type="button"
+                class="btn-secondary px-3"
+                onclick={selectOutputDirectory}
+              >
+                Browse
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="start-date">Training Start Date:</label>
             <input
               class="form-input"
-              id="output-directory"
-              type="text"
-              bind:value={formData.output_directory}
-              placeholder="Enter output directory path"
-              required
+              id="start-date"
+              type="date"
+              bind:value={formData.start_date}
+              placeholder="Select training start date"
             />
           </div>
 

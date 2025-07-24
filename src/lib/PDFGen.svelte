@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { formatDateToGerman, getWorkWeekDateRange } from "./util";
+  import {
+    formatDateToGerman,
+    getWorkWeekDateRange,
+    calculateTrainingWeekNumber,
+  } from "./util";
   import { onMount } from "svelte";
   import { config } from "./store";
   import Printd from "printd";
@@ -20,38 +24,11 @@
   let printContainer: HTMLElement;
   let weekMap = $state<Partial<Record<AreaType, DayEntry[]>>>({});
 
-  function handlePrint() {
-    window.print();
-    const printWindow = window.open("", "_blank", "width=800,height=600");
-    if (!printWindow) return;
-    const printContent = printContainer.innerHTML;
-    printWindow.document.write(`${printContent}`);
-    printWindow.document.close();
-    printWindow.focus();
-
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 500);
-  }
-
   function handleSavePDF() {
     openPrintWindow();
   }
 
   function openPrintWindow() {
-    /*const printWindow = window.open("", "_blank", "width=800,height=600");
-    if (!printWindow) return;
-
-    const printContent = generatePrintHTML();
-
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    printWindow.focus();
-
-    setTimeout(() => {
-      printWindow.print();
-    }, 500);*/
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = generatePrintHTML();
     new Printd().print(tempDiv);
@@ -59,22 +36,29 @@
 
   function generatePrintHTML(): string {
     const content = printContainer.innerHTML;
-    
-    const existingStyles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
-      .map(el => {
-        if (el.tagName === 'LINK') {
+    const trainingWeek = calculateTrainingWeekNumber(
+      $config.start_date,
+      weekData.year,
+      weekData.week
+    );
+
+    const existingStyles = Array.from(
+      document.querySelectorAll('link[rel="stylesheet"], style')
+    )
+      .map((el) => {
+        if (el.tagName === "LINK") {
           return `<link rel="stylesheet" href="${(el as HTMLLinkElement).href}">`;
         } else {
           return `<style>${(el as HTMLStyleElement).innerHTML}</style>`;
         }
       })
-      .join('\n    ');
-    
+      .join("\n    ");
+
     return `
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Berichtsheft KW ${weekData.week}/${weekData.year}</title>
+          <title>Berichtsheft Woche ${trainingWeek} (KW ${weekData.week}/${weekData.year})</title>
           <meta charset="utf-8">
           ${existingStyles}
           <style>
@@ -106,7 +90,6 @@
     const handleKeydown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "p") {
         e.preventDefault();
-        handlePrint();
       }
     };
 
@@ -140,26 +123,11 @@
   >
     <!-- Header -->
     <div
-      class="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700"
+      class="flex place-self-center p-6 border-b border-gray-200 dark:border-gray-700"
     >
       <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
         Berichtsheft Preview - KW {weekData.week}/{weekData.year}
       </h2>
-      <div class="flex gap-3">
-        <button
-          class="btn-success"
-          onclick={handleSavePDF}
-          title="Open print window - use 'Save as PDF' in print dialog"
-        >
-          📄 Print/Save PDF
-        </button>
-        <button
-          class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl w-8 h-8 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-          onclick={onClose}
-        >
-          ×
-        </button>
-      </div>
     </div>
 
     <!-- Preview Content -->
@@ -219,7 +187,13 @@
                     year: "numeric",
                   })}</td
                 >
-                <td class="px-4 py-3 font-medium">{weekData.week}</td>
+                <td class="px-4 py-3 font-medium"
+                  >{calculateTrainingWeekNumber(
+                    $config.start_date,
+                    weekData.year,
+                    weekData.week
+                  )}</td
+                >
               </tr>
             </tbody>
           </table>
@@ -295,12 +269,14 @@
     <div
       class="border-t border-gray-200 dark:border-gray-700 p-6 flex justify-between items-center"
     >
-      <div class="text-sm text-gray-600 dark:text-gray-400">
+      <!--<div class="text-sm text-gray-600 dark:text-gray-400">
         Tipp: Verwenden Sie Strg+P zum schnellen Drucken
-      </div>
+      </div>-->
+      <div></div>
       <div class="flex gap-3">
-        <button class="btn-secondary" onclick={onClose}> Schließen </button>
-        <button class="btn-primary" onclick={handlePrint}> 🖨️ Drucken </button>
+        <button class="btn-primary" onclick={onClose}> Schließen </button>
+        <button class="btn-primary" onclick={handleSavePDF}> 📄 Save</button>
+        <button class="btn-primary" disabled> 🖨️ Print </button>
       </div>
     </div>
   </div>

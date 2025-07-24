@@ -7,6 +7,7 @@ export const config = writable<Config>({
   department_name: "",
   company_name: "",
   output_directory: "",
+  start_date: "",
 });
 
 export const currentWeek = writable<{ year: number; week: number }>({

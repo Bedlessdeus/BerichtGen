@@ -12,6 +12,7 @@ pub struct Config {
     pub department_name: String,
     pub company_name: String,
     pub output_directory: String,
+    pub start_date: String,
 }
 
 impl Default for Config {
@@ -24,6 +25,7 @@ impl Default for Config {
                 .unwrap_or_else(|| PathBuf::from("."))
                 .to_string_lossy()
                 .to_string(),
+            start_date: "".to_string(),
         }
     }
 }
@@ -255,6 +257,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_dialog::init())
         .manage(AppState::default())
         .invoke_handler(tauri::generate_handler![
             load_config,
