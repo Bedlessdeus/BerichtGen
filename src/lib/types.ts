@@ -21,5 +21,5 @@ export interface WeekData {
 export type Weekday = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday';
 
 export const WEEKDAYS: Weekday[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-export const AREAS = ['Department', 'School', 'Seminar'] as const;
+export const AREAS = ['Department', 'School', 'Seminar', 'Holiday'] as const;
 export type AreaType = typeof AREAS[number];

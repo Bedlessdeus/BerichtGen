@@ -19,6 +19,7 @@ export const weekDataCache = writable<Map<string, WeekData>>(new Map());
 
 export const isLoading = writable(false);
 export const isConfigOpen = writable(false);
+export const selfDirectory = writable<string>("");
 
 export const currentWeekData = derived(
   [currentWeek, weekDataCache],
@@ -40,6 +41,7 @@ export const loadConfig = async () => {
   try {
     const loadedConfig = await invoke<Config>("load_config");
     config.set(loadedConfig);
+    selfDirectory.set(await invoke<string>("get_self_directory"));
     return loadedConfig;
   } catch (error) {
     console.error("Failed to load config:", error);

@@ -20,17 +20,16 @@
     notes: entry?.notes || "",
   });
 
-  // Helper functions for date formatting
   function formatDateToGerman(date: Date): string {
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
     return `${day}.${month}.${year}`;
   }
 
   function parseDateFromGerman(dateStr: string): Date | null {
     if (!dateStr) return null;
-    const parts = dateStr.split('.');
+    const parts = dateStr.split(".");
     if (parts.length !== 3) return null;
     const day = parseInt(parts[0]);
     const month = parseInt(parts[1]) - 1;
@@ -41,17 +40,15 @@
   function formatDateToISO(dateStr: string): string {
     const date = parseDateFromGerman(dateStr);
     if (!date) return dateStr;
-    // Use UTC to avoid timezone offset issues
     const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
     return `${year}-${month}-${day}`;
   }
 
   function formatDateFromISO(isoStr: string): string {
-    if (!isoStr) return '';
-    // Parse ISO date without timezone conversion
-    const parts = isoStr.split('-');
+    if (!isoStr) return "";
+    const parts = isoStr.split("-");
     if (parts.length !== 3) return isoStr;
     const year = parseInt(parts[0]);
     const month = parseInt(parts[1]) - 1;
@@ -89,9 +86,10 @@
   async function handleSave() {
     try {
       isSaving = true;
+      formData.notes = formData.area !== AREAS[3] ? formData.notes : "";
       const saveData = {
         ...formData,
-        date: formatDateToISO(formData.date)
+        date: formatDateToISO(formData.date),
       };
       await saveDayEntry(year, week, weekday, saveData);
       isEditing = false;
@@ -118,9 +116,9 @@
 
   $effect(() => {
     if (entry) {
-      formData = { 
+      formData = {
         ...entry,
-        date: formatDateFromISO(entry.date)
+        date: formatDateFromISO(entry.date),
       };
     }
   });
@@ -171,17 +169,19 @@
         </select>
       </div>
 
-      <div class="form-group">
-        <label class="form-label" for="{weekday}-notes">Notes:</label>
-        <textarea
-          class="form-textarea"
-          id="{weekday}-notes"
-          bind:value={formData.notes}
-          placeholder="What did you do today?"
-          rows="4"
-          required
-        ></textarea>
-      </div>
+      {#if formData.area !== AREAS[3]}
+        <div class="form-group">
+          <label class="form-label" for="{weekday}-notes">Notes:</label>
+          <textarea
+            class="form-textarea"
+            id="{weekday}-notes"
+            bind:value={formData.notes}
+            placeholder="What did you do today?"
+            rows="4"
+            required
+          ></textarea>
+        </div>
+      {/if}
 
       <div class="form-actions">
         <button
@@ -212,8 +212,12 @@
         <span class="field-value">{entry.area}</span>
       </div>
       <div class="entry-field">
-        <span class="field-label">Notes:</span>
-        <div class="field-value field-notes">{entry.notes}</div>
+        {#if entry.area !== AREAS[3]}
+          <span class="field-label">Notes:</span>
+          <span class="field-value">{entry.notes}</span>
+        {:else}
+          <span class="field-label">No notes available</span>
+        {/if}
       </div>
     </div>
   {:else}
