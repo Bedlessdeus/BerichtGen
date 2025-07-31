@@ -11,6 +11,7 @@
     getCurrentWeekInfo,
     generatePDF,
     getWeeksAroundCurrent,
+    currentLanguage,
   } from "../lib/store.js";
   import { WEEKDAYS } from "../lib/types.js";
   import ConfigModal from "../lib/ConfigModal.svelte";
@@ -93,10 +94,10 @@
 <main class="app-container">
   <header class="app-header">
     <div class="header-content">
-      <h1 class="app-title">Berichtsheft Manager</h1>
+      <h1 class="app-title">{$currentLanguage.program_title}</h1>
       <div class="flex gap-4">
         <button class="btn-secondary" onclick={openConfig}>
-          ⚙️ Settings
+          {$currentLanguage.config_button_text}
         </button>
       </div>
     </div>
@@ -108,13 +109,13 @@
       onclick={() => handleWeekChange("prev")}
       disabled={selectedWeekIndex === 0 || $isLoading}
     >
-      ← Previous Week
+      {$currentLanguage.program_previous_week}
     </button>
 
     <div class="week-info">
       {#if currentWeekInfo}
         <h2 class="week-title">
-          Calendar Week {currentWeekInfo.week} - {currentWeekInfo.year}
+          {$currentLanguage.program_subtitle_calendar_week} {currentWeekInfo.week} - {currentWeekInfo.year}
         </h2>
         <h3 class="week-subtitle">
           {getWorkWeekDateRange(currentWeekInfo.year, currentWeekInfo.week)}
@@ -126,18 +127,18 @@
             onclick={handleGenerateReport}
             disabled={$isLoading}
           >
-            PDF Preview
+            {$currentLanguage.program_button_pdf_preview}
           </button>
           <button
             class="btn-primary"
             onclick={handleGenerateTextReport}
             disabled={reportGenerating || $isLoading}
           >
-            {reportGenerating ? "Generating..." : "Text Report"}
+            {reportGenerating ? $currentLanguage.program_button_generating : $currentLanguage.program_button_text_report}
           </button>
         </div>
       {:else}
-        <h2 class="week-title">Loading...</h2>
+        <h2 class="week-title">{$currentLanguage.program_loading}</h2>
       {/if}
     </div>
 
@@ -146,13 +147,13 @@
       onclick={() => handleWeekChange("next")}
       disabled={selectedWeekIndex === availableWeeks.length - 1 || $isLoading}
     >
-      Next Week →
+      {$currentLanguage.program_next_week}
     </button>
   </div>
 
   {#if $isLoading}
     <div class="loading-container">
-      <p>Loading week data...</p>
+      <p>{$currentLanguage.program_loading_week_data}</p>
     </div>
   {:else if currentWeekInfo}
     <div class="week-grid">
@@ -171,7 +172,7 @@
   {#if lastGeneratedReport}
     <div class="success-message">
       <p>
-        Last report generated: <code class="success-code"
+        {$currentLanguage.program_last_report_generated} <code class="success-code"
           >{lastGeneratedReport}</code
         >
       </p>

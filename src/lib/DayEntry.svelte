@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { saveDayEntry } from "../lib/store.js";
+  import { currentLanguage, saveDayEntry } from "../lib/store.js";
   import { AREAS, type DayEntry, type Weekday } from "../lib/types.js";
+  import { translateArea, translateWeekday } from "./lang.js";
 
   interface Props {
     weekday: Weekday;
@@ -20,44 +21,43 @@
     notes: entry?.notes || "",
   });
 
-  function formatDateToGerman(date: Date): string {
+  const formatDateToGerman = (date: Date): string => {
     const day = date.getDate().toString().padStart(2, "0");
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
     return `${day}.${month}.${year}`;
-  }
+  };
 
-  function parseDateFromGerman(dateStr: string): Date | null {
+  const parseDateFromGerman = (dateStr: string): Date | null => {
     if (!dateStr) return null;
     const parts = dateStr.split(".");
     if (parts.length !== 3) return null;
-    const day = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1;
-    const year = parseInt(parts[2]);
-    return new Date(year, month, day);
-  }
+    return new Date(
+      parseInt(parts[2]),
+      parseInt(parts[1]) - 1,
+      parseInt(parts[0])
+    );
+  };
 
-  function formatDateToISO(dateStr: string): string {
+  const formatDateToISO = (dateStr: string): string => {
     const date = parseDateFromGerman(dateStr);
     if (!date) return dateStr;
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const day = date.getDate().toString().padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  }
+    return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
+  };
 
-  function formatDateFromISO(isoStr: string): string {
+  const formatDateFromISO = (isoStr: string): string => {
     if (!isoStr) return "";
     const parts = isoStr.split("-");
     if (parts.length !== 3) return isoStr;
-    const year = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1;
-    const day = parseInt(parts[2]);
-    const date = new Date(year, month, day);
+    const date = new Date(
+      parseInt(parts[0]),
+      parseInt(parts[1]) - 1,
+      parseInt(parts[2])
+    );
     return formatDateToGerman(date);
-  }
+  };
 
-  function startEditing() {
+  const startEditing = () => {
     isEditing = true;
     if (!formData.date) {
       const mondayOfWeek = getMondayOfWeek(year, week);
@@ -72,18 +72,18 @@
       targetDate.setDate(targetDate.getDate() + dayOffset);
       formData.date = formatDateToGerman(targetDate);
     }
-  }
+  };
 
-  function cancelEditing() {
+  const cancelEditing = () => {
     isEditing = false;
     formData = {
       date: entry?.date || "",
       area: entry?.area || "Department",
       notes: entry?.notes || "",
     };
-  }
+  };
 
-  async function handleSave() {
+  const handleSave = async () => {
     try {
       isSaving = true;
       formData.notes = formData.area !== AREAS[3] ? formData.notes : "";
@@ -100,9 +100,9 @@
     } finally {
       isSaving = false;
     }
-  }
+  };
 
-  function getMondayOfWeek(year: number, week: number): Date {
+  const getMondayOfWeek = (year: number, week: number): Date => {
     const jan4 = new Date(year, 0, 4);
     const jan4Day = jan4.getDay() || 7;
     const mondayOfWeek1 = new Date(jan4);
@@ -112,7 +112,7 @@
     targetMonday.setDate(mondayOfWeek1.getDate() + (week - 1) * 7);
 
     return targetMonday;
-  }
+  };
 
   $effect(() => {
     if (entry) {
@@ -126,10 +126,12 @@
 
 <div class="day-card">
   <div class="day-header">
-    <h3 class="day-title">{weekday}</h3>
+    <h3 class="day-title">{translateWeekday(weekday, $currentLanguage)}</h3>
     {#if !isEditing}
       <button class="btn-small" onclick={startEditing}>
-        {entry ? "Edit" : "Add"}
+        {entry
+          ? $currentLanguage.day_button_edit_text
+          : $currentLanguage.day_button_add_text}
       </button>
     {/if}
   </div>
@@ -143,20 +145,24 @@
       }}
     >
       <div class="form-group">
-        <label class="form-label" for="{weekday}-date">Date:</label>
+        <label class="form-label" for="{weekday}-date"
+          >{$currentLanguage.day_input_label_date}</label
+        >
         <input
           class="form-input"
           id="{weekday}-date"
           type="text"
           bind:value={formData.date}
-          title="Please enter date in DD.MM.YYYY format"
+          title={$currentLanguage.day_input_placeholder_date}
           required
           disabled
         />
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="{weekday}-area">Area:</label>
+        <label class="form-label" for="{weekday}-area"
+          >{$currentLanguage.day_input_label_area}</label
+        >
         <select
           class="form-select"
           id="{weekday}-area"
@@ -164,19 +170,19 @@
           required
         >
           {#each AREAS as area}
-            <option value={area}>{area}</option>
+            <option value={area}>{translateArea(area, $currentLanguage)}</option>
           {/each}
         </select>
       </div>
 
       {#if formData.area !== AREAS[3]}
         <div class="form-group">
-          <label class="form-label" for="{weekday}-notes">Notes:</label>
+          <label class="form-label" for="{weekday}-notes">{$currentLanguage.day_input_notes_label}</label>
           <textarea
             class="form-textarea"
             id="{weekday}-notes"
             bind:value={formData.notes}
-            placeholder="What did you do today?"
+            placeholder={$currentLanguage.day_input_notes_placeholder}
             rows="4"
             required
           ></textarea>
@@ -190,39 +196,39 @@
           onclick={cancelEditing}
           disabled={isSaving}
         >
-          Cancel
+          {$currentLanguage.day_button_cancel_text}
         </button>
         <button
           class="btn-primary text-sm py-2 px-3"
           type="submit"
           disabled={isSaving}
         >
-          {isSaving ? "Saving..." : "Save"}
+          {isSaving ? $currentLanguage.day_button_save_text_saving : $currentLanguage.day_button_save_text}
         </button>
       </div>
     </form>
   {:else if entry}
     <div class="entry-display">
       <div class="entry-field">
-        <span class="field-label">Date:</span>
+        <span class="field-label">{$currentLanguage.day_view_label_date}</span>
         <span class="field-value">{entry.date}</span>
       </div>
       <div class="entry-field">
-        <span class="field-label">Area:</span>
-        <span class="field-value">{entry.area}</span>
+        <span class="field-label">{$currentLanguage.day_view_label_area}</span>
+        <span class="field-value">{translateArea(entry.area, $currentLanguage)}</span>
       </div>
       <div class="entry-field">
         {#if entry.area !== AREAS[3]}
-          <span class="field-label">Notes:</span>
+          <span class="field-label">{$currentLanguage.day_view_label_notes}</span>
           <span class="field-value">{entry.notes}</span>
         {:else}
-          <span class="field-label">No notes available</span>
+          <span class="field-label">{$currentLanguage.day_view_label_no_notes}</span>
         {/if}
       </div>
     </div>
   {:else}
     <div class="entry-empty">
-      <p>No entry for this day</p>
+      <p>{$currentLanguage.day_view_missing_entry}</p>
     </div>
   {/if}
 </div>

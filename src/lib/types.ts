@@ -4,6 +4,8 @@ export interface Config {
   company_name: string;
   output_directory: string;
   start_date: string;
+  language: string;
+  custom_language_directory: string;
 }
 
 export interface DayEntry {

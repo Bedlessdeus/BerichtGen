@@ -1,6 +1,7 @@
 import { writable, derived } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 import type { Config, WeekData, DayEntry } from "./types.js";
+import { getLanguage, type Language } from "./lang.js";
 
 export const config = writable<Config>({
   trainee_name: "",
@@ -8,7 +9,14 @@ export const config = writable<Config>({
   company_name: "",
   output_directory: "",
   start_date: "",
+  language: "en",
+  custom_language_directory: "",
 });
+
+export const currentLanguage = derived(
+  config,
+  ($config) => getLanguage($config.language)
+);
 
 export const currentWeek = writable<{ year: number; week: number }>({
   year: 2025,

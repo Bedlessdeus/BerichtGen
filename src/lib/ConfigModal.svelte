@@ -1,12 +1,55 @@
 <script lang="ts">
-  import { config, saveConfig, isConfigOpen, selfDirectory } from "../lib/store.js";
+  import {
+    config,
+    saveConfig,
+    isConfigOpen,
+    selfDirectory,
+    currentLanguage,
+  } from "../lib/store.js";
   import { open } from "@tauri-apps/plugin-dialog";
   import type { Config } from "../lib/types.js";
   import { openUrl } from "@tauri-apps/plugin-opener";
+  import {
+    AVAILABLE_LANGUAGES,
+    loadLanguageFile,
+    registerLanguage,
+    getAvailableLanguages,
+    loadUserLanguagesFromDirectory,
+  } from "./lang.js";
 
   let formData: Config = $state({ ...$config });
   let isSaving = $state(false);
   let saveMessage = $state("");
+  let availableLanguages = $state(getAvailableLanguages());
+
+  async function loadExternalLanguages() {
+    const externalLanguages = [
+      { code: "fr", name: "Français", path: "/languages/fr.json" },
+      { code: "es", name: "Español", path: "/languages/es.json" },
+    ];
+
+    for (const lang of externalLanguages) {
+      try {
+        const langData = await loadLanguageFile(lang.path);
+        if (langData) {
+          registerLanguage(lang.code, lang.name, langData);
+        }
+      } catch (error) {
+        console.warn(`Failed to load language ${lang.name}:`, error);
+      }
+    }
+
+    availableLanguages = getAvailableLanguages();
+  }
+
+  $effect(() => {
+    if ($isConfigOpen) {
+      loadExternalLanguages();
+      if (formData.custom_language_directory) {
+        loadCustomLanguages();
+      }
+    }
+  });
 
   async function selectOutputDirectory() {
     try {
@@ -34,6 +77,49 @@
       }
     } catch (error) {
       console.error("Failed to open self directory:", error);
+    }
+  }
+
+  async function selectCustomLanguageDirectory() {
+    try {
+      const selected = await open({
+        directory: true,
+        multiple: false,
+        defaultPath: formData.custom_language_directory || undefined,
+      });
+
+      if (selected) {
+        formData.custom_language_directory = selected;
+        await loadCustomLanguages();
+      }
+    } catch (error) {
+      console.error("Failed to select custom language directory:", error);
+    }
+  }
+
+  async function loadCustomLanguages() {
+    if (formData.custom_language_directory) {
+      try {
+        const loadedCount = await loadUserLanguagesFromDirectory(
+          formData.custom_language_directory
+        );
+        console.log(`Loaded ${loadedCount} custom language files`);
+
+        availableLanguages = getAvailableLanguages();
+
+        if (loadedCount > 0) {
+          saveMessage = `Loaded ${loadedCount} custom language(s) successfully!`;
+          setTimeout(() => {
+            saveMessage = "";
+          }, 3000);
+        }
+      } catch (error) {
+        console.error("Failed to load custom languages:", error);
+        saveMessage = `Error loading custom languages: ${error}`;
+        setTimeout(() => {
+          saveMessage = "";
+        }, 5000);
+      }
     }
   }
 
@@ -93,7 +179,9 @@
       tabindex="-1"
     >
       <div class="modal-header">
-        <h2 class="modal-title" id="config-title">Configuration</h2>
+        <h2 class="modal-title" id="config-title">
+          {$currentLanguage.config_title_configuration}
+        </h2>
       </div>
 
       <div class="modal-body">
@@ -105,59 +193,63 @@
           }}
         >
           <div class="form-group">
-            <label class="form-label" for="trainee-name">Trainee Name:</label>
+            <label class="form-label" for="trainee-name"
+              >{$currentLanguage.config_input_label_trainee}:</label
+            >
             <input
               class="form-input"
               id="trainee-name"
               type="text"
               bind:value={formData.trainee_name}
-              placeholder="Enter your name"
+              placeholder={$currentLanguage.config_input_placeholder_trainee}
               required
             />
           </div>
 
           <div class="form-group">
             <label class="form-label" for="department-name"
-              >Department Name:</label
+              >{$currentLanguage.config_input_label_department}:</label
             >
             <input
               class="form-input"
               id="department-name"
               type="text"
               bind:value={formData.department_name}
-              placeholder="Department name"
+              placeholder={$currentLanguage.config_input_placeholder_department}
               required
             />
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="company-name">Company Name:</label>
+            <label class="form-label" for="company-name"
+              >{$currentLanguage.config_input_label_company}:</label
+            >
             <input
               class="form-input"
               id="company-name"
               type="text"
               bind:value={formData.company_name}
-              placeholder="Company name"
+              placeholder={$currentLanguage.config_input_placeholder_company}
               required
             />
           </div>
 
           <div class="form-group">
             <label class="form-label" for="start-date"
-              >Training Start Date:</label
+              >{$currentLanguage.config_input_label_training_start}:</label
             >
             <input
               class="form-input"
               id="start-date"
               type="date"
               bind:value={formData.start_date}
-              placeholder="Select training start date"
+              placeholder={$currentLanguage.config_input_placeholder_training_start}
             />
           </div>
 
           <div class="form-group">
             <label class="form-label" for="output-directory"
-              >Output Directory:</label
+              >{$currentLanguage.config_input_label_output_directory}:</label
             >
             <div class="flex gap-2">
               <input
@@ -165,7 +257,7 @@
                 id="output-directory"
                 type="text"
                 bind:value={formData.output_directory}
-                placeholder="Select output directory"
+                placeholder={$currentLanguage.config_input_placeholder_output_directory}
                 readonly
               />
               <button
@@ -173,14 +265,14 @@
                 class="btn-secondary px-3"
                 onclick={selectOutputDirectory}
               >
-                Browse
+                {$currentLanguage.config_input_button_text_output_directory}
               </button>
             </div>
           </div>
 
           <div class="form-group">
             <label class="form-label" for="self-directory"
-              >Self Directory:</label
+              >{$currentLanguage.config_input_label_self_directory}:</label
             >
             <div class="flex gap-2">
               <input
@@ -188,7 +280,7 @@
                 id="self-directory"
                 type="text"
                 value={$selfDirectory}
-                placeholder="Select self directory"
+                placeholder={$currentLanguage.config_input_placeholder_self_directory}
                 readonly
                 disabled
               />
@@ -197,7 +289,45 @@
                 class="btn-secondary px-3"
                 onclick={openSelfDirectory}
               >
-                Browse
+                {$currentLanguage.config_input_button_text_self_directory}
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="language-select"
+              >{$currentLanguage.config_input_label_language}:</label
+            >
+            <select
+              class="form-select"
+              id="language-select"
+              bind:value={formData.language}
+            >
+              {#each availableLanguages as lang}
+                <option value={lang.code}>{lang.name}</option>
+              {/each}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="custom-language-directory"
+              >{$currentLanguage.config_input_label_custom_language_directory}:</label
+            >
+            <div class="flex gap-2">
+              <input
+                class="form-input flex-1"
+                id="custom-language-directory"
+                type="text"
+                bind:value={formData.custom_language_directory}
+                placeholder={$currentLanguage.config_input_placeholder_custom_language_directory}
+                readonly
+              />
+              <button
+                type="button"
+                class="btn-secondary px-3"
+                onclick={selectCustomLanguageDirectory}
+              >
+                {$currentLanguage.config_input_button_text_custom_language_directory}
               </button>
             </div>
           </div>
@@ -219,10 +349,12 @@
               onclick={handleClose}
               disabled={isSaving}
             >
-              Cancel
+              {$currentLanguage.config_button_cancel_text}
             </button>
             <button class="btn-primary" type="submit" disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save"}
+              {isSaving
+                ? $currentLanguage.config_button_save_text_saving
+                : $currentLanguage.config_button_save_text}
             </button>
           </div>
         </form>

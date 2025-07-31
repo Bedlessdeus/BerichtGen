@@ -14,6 +14,9 @@
     type AreaType,
   } from "./types";
 
+  import { currentLanguage } from "../lib/store.js";
+  import { translateArea, translateWeekday } from "./lang";
+
   interface Props {
     weekData: WeekData;
     onClose: () => void;
@@ -126,7 +129,8 @@
       class="flex place-self-center p-6 border-b border-gray-200 dark:border-gray-700"
     >
       <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-        Berichtsheft Preview - KW {weekData.week}/{weekData.year}
+        {$currentLanguage.pdf_preview_title}
+        {weekData.week}/{weekData.year}
       </h2>
     </div>
 
@@ -136,10 +140,11 @@
         <!-- Print Header -->
         <div class="text-center mb-8 pb-6 border-b-2 border-gray-300">
           <h1 class="text-3xl font-bold text-gray-800 mb-2">
-            Ausbildungsnachweis
+            {$currentLanguage.pdf_gen_title}
           </h1>
           <p class="text-lg text-gray-600">
-            Kalenderwoche {weekData.week}/{weekData.year}
+            {$currentLanguage.pdf_gen_subtitle_calender_week}
+            {weekData.week}/{weekData.year}
           </p>
         </div>
 
@@ -149,14 +154,22 @@
             <thead>
               <tr class="text-left">
                 <th class="px-4 py-3 font-semibold text-gray-700"
-                  >GB/Werk/Abt</th
+                  >{$currentLanguage.pdf_gen_label_department}</th
                 >
-                <th class="px-4 py-3 font-semibold text-gray-700">Von</th>
-                <th class="px-4 py-3 font-semibold text-gray-700">Bis</th>
-                <th class="px-4 py-3 font-semibold text-gray-700">Name</th>
-                <th class="px-4 py-3 font-semibold text-gray-700">Datum</th>
                 <th class="px-4 py-3 font-semibold text-gray-700"
-                  >Nachweis-Nr.</th
+                  >{$currentLanguage.pdf_gen_label_from}</th
+                >
+                <th class="px-4 py-3 font-semibold text-gray-700"
+                  >{$currentLanguage.pdf_gen_label_to}</th
+                >
+                <th class="px-4 py-3 font-semibold text-gray-700"
+                  >{$currentLanguage.pdf_gen_label_trainee}</th
+                >
+                <th class="px-4 py-3 font-semibold text-gray-700"
+                  >{$currentLanguage.pdf_gen_label_current_date}</th
+                >
+                <th class="px-4 py-3 font-semibold text-gray-700"
+                  >{$currentLanguage.pdf_gen_label_report_number}</th
                 >
               </tr>
             </thead>
@@ -206,16 +219,19 @@
               <h3
                 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-blue-500"
               >
-                {area}
+                {translateArea(area, $currentLanguage)}
               </h3>
               <div class="space-y-3">
                 {#each entries as entry}
                   <div class="p-4">
                     <div class="flex justify-between items-center mb-3">
                       <h4 class="font-semibold text-gray-800">
-                        {new Date(entry.date).toLocaleDateString("de-DE", {
-                          weekday: "long",
-                        })}
+                        {translateWeekday(
+                          new Date(entry.date).toLocaleDateString("en-US", {
+                            weekday: "long",
+                          }),
+                          $currentLanguage
+                        )}
                       </h4>
                       <span class="text-sm font-medium text-gray-600">
                         {formatDateToGerman(entry.date)}
@@ -239,7 +255,7 @@
                 <div class="h-16 mb-2"></div>
                 <div class="border-t border-gray-400 pt-2">
                   <p class="text-sm font-medium text-gray-700">
-                    Unterschrift des Ausbildenden
+                    {$currentLanguage.pdf_gen_label_signature_trainer}
                   </p>
                 </div>
               </div>
@@ -247,7 +263,7 @@
                 <div class="h-16 mb-2"></div>
                 <div class="border-t border-gray-400 pt-2">
                   <p class="text-sm font-medium text-gray-700">
-                    Unterschrift des Auszubildenden
+                    {$currentLanguage.pdf_gen_label_signature_trainee}
                   </p>
                 </div>
               </div>
@@ -255,7 +271,7 @@
                 <div class="h-16 mb-2"></div>
                 <div class="border-t border-gray-400 pt-2">
                   <p class="text-sm font-medium text-gray-700">
-                    Unterschrift des gesetzlichen Vertreters
+                    {$currentLanguage.pdf_gen_label_signature_guardian}
                   </p>
                 </div>
               </div>
@@ -274,9 +290,15 @@
       </div>-->
       <div></div>
       <div class="flex gap-3">
-        <button class="btn-primary" onclick={onClose}> Schließen </button>
-        <button class="btn-primary" onclick={handleSavePDF}> 📄 Save</button>
-        <button class="btn-primary" disabled> 🖨️ Print </button>
+        <button class="btn-primary" onclick={onClose}>
+          {$currentLanguage.pdf_preview_button_close_text}
+        </button>
+        <button class="btn-primary" onclick={handleSavePDF}>
+          {$currentLanguage.pdf_preview_button_save_text}
+        </button>
+        <button class="btn-primary" disabled>
+          {$currentLanguage.pdf_preview_button_print_text}
+        </button>
       </div>
     </div>
   </div>
