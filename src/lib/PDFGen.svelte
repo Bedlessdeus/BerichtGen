@@ -46,6 +46,8 @@
       weekData.week
     );
 
+    console.log($currentLanguage)
+
     const existingStyles = Array.from(
       document.querySelectorAll('link[rel="stylesheet"], style')
     )

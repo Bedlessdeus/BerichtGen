@@ -1,7 +1,7 @@
 import { writable, derived } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 import type { Config, WeekData, DayEntry } from "./types.js";
-import { getLanguage, type Language } from "./lang.js";
+import { getLanguage, type Language, loadUserLanguagesFromDirectory } from "./lang.js";
 
 export const config = writable<Config>({
   trainee_name: "",
@@ -53,6 +53,17 @@ export const loadConfig = async () => {
     const loadedConfig = await invoke<Config>("load_config");
     config.set(loadedConfig);
     selfDirectory.set(await invoke<string>("get_self_directory"));
+    if (loadedConfig.custom_language_directory) {
+      try {
+        const loadedCount = await loadUserLanguagesFromDirectory(
+          loadedConfig.custom_language_directory
+        );
+        console.log(`Loaded ${loadedCount} custom language files on startup`);
+      } catch (error) {
+        console.error("Failed to load custom languages on startup:", error);
+      }
+    }
+
     return loadedConfig;
   } catch (error) {
     console.error("Failed to load config:", error);

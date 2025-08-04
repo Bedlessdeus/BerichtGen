@@ -1,3 +1,5 @@
+import { readDir, readTextFile } from "@tauri-apps/plugin-fs";
+
 export type Language = {
   monday_text: string;
   tuesday_text: string;
@@ -310,7 +312,6 @@ export const DE: Language = {
   pdf_gen_label_signature_guardian: "Unterschrift Erziehungsberechtigter",
 };
 
-
 export const AVAILABLE_LANGUAGES = {
   en: { code: "en", name: "English", data: EN },
   de: { code: "de", name: "Deutsch", data: DE },
@@ -343,8 +344,6 @@ export const loadUserLanguageFile = async (
   filePath: string
 ): Promise<Language | null> => {
   try {
-    const { readTextFile } = await import("@tauri-apps/plugin-fs");
-
     const content = await readTextFile(filePath);
     const data = JSON.parse(content);
     if (validateLanguageData(data)) {
@@ -483,8 +482,6 @@ export const scanDirectoryForLanguageFiles = async (
   dirPath: string
 ): Promise<Array<{ code: string; name: string; path: string }>> => {
   try {
-    const { readDir } = await import("@tauri-apps/plugin-fs");
-
     const entries = await readDir(dirPath);
     const languageFiles: Array<{ code: string; name: string; path: string }> =
       [];
@@ -514,7 +511,7 @@ export const scanDirectoryForLanguageFiles = async (
 export const loadUserLanguagesFromDirectory = async (
   dirPath: string
 ): Promise<number> => {
-  const languageFiles = await scanDirectoryForLanguageFiles(dirPath);
+  /*const languageFiles = await scanDirectoryForLanguageFiles(dirPath);
   let loadedCount = 0;
 
   for (const langFile of languageFiles) {
@@ -525,7 +522,8 @@ export const loadUserLanguagesFromDirectory = async (
     }
   }
 
-  return loadedCount;
+  return loadedCount;*/
+  return 0;
 };
 
 export const translateWeekday = (

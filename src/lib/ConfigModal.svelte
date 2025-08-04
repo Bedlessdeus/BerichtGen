@@ -26,6 +26,7 @@
     const externalLanguages = [
       { code: "fr", name: "Français", path: "/languages/fr.json" },
       { code: "es", name: "Español", path: "/languages/es.json" },
+      { code: "dn", name: "Denglish", path: "/languages/dn.json"},
     ];
 
     for (const lang of externalLanguages) {
@@ -45,9 +46,10 @@
   $effect(() => {
     if ($isConfigOpen) {
       loadExternalLanguages();
+      /*
       if (formData.custom_language_directory) {
         loadCustomLanguages();
-      }
+      }*/
     }
   });
 
@@ -169,6 +171,11 @@
     try {
       isSaving = true;
       saveMessage = "";
+
+      /*if (formData.custom_language_directory !== $config.custom_language_directory) {
+        await loadCustomLanguages();
+      }*/
+      
       await saveConfig(formData);
       saveMessage = "Configuration saved successfully!";
       setTimeout(() => {

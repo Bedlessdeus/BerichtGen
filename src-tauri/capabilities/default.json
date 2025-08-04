@@ -7,13 +7,19 @@
     "core:default",
     "opener:default",
     "dialog:allow-open",
+    "fs:default",
+    {
+      "identifier": "fs:read-dirs",
+      "allow": [{ "path": "*" }]
+    },
+    { "identifier": "fs:allow-exists", "allow": [{ "path": "*" }] },
     {
       "identifier": "opener:allow-open-url",
-      "allow": [{"url": "*"}]
+      "allow": [{ "url": "*" }]
     },
     {
       "identifier": "opener:allow-default-urls",
-      "allow": [{"url": "*"}]
+      "allow": [{ "url": "*" }]
     }
   ]
 }
