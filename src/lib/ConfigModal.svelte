@@ -97,6 +97,48 @@
     }
   }
 
+  async function selectBannerImage() {
+    try {
+      const selected = await open({
+        multiple: false,
+        filters: [
+          {
+            name: "Image Files",
+            extensions: ["png", "jpg", "jpeg", "gif", "bmp", "svg", "webp"],
+          },
+        ],
+        defaultPath: formData.banner_image || undefined,
+      });
+
+      if (selected) {
+        formData.banner_image = selected;
+      }
+    } catch (error) {
+      console.error("Failed to select banner image:", error);
+    }
+  }
+
+  async function selectCompanyLogo() {
+    try {
+      const selected = await open({
+        multiple: false,
+        filters: [
+          {
+            name: "Image Files",
+            extensions: ["png", "jpg", "jpeg", "gif", "bmp", "svg", "webp"],
+          },
+        ],
+        defaultPath: formData.company_logo || undefined,
+      });
+
+      if (selected) {
+        formData.company_logo = selected;
+      }
+    } catch (error) {
+      console.error("Failed to select company logo:", error);
+    }
+  }
+
   async function loadCustomLanguages() {
     if (formData.custom_language_directory) {
       try {
@@ -328,6 +370,64 @@
                 onclick={selectCustomLanguageDirectory}
               >
                 {$currentLanguage.config_input_button_text_custom_language_directory}
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="output-format"
+              >{$currentLanguage.config_input_label_output_format}:</label
+            >
+            <input
+              class="form-input"
+              id="output-format"
+              type="text"
+              bind:value={formData.output_format}
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="banner-image"
+              >{$currentLanguage.config_input_label_banner_image}:</label
+            >
+            <div class="flex gap-2">
+              <input
+                class="form-input flex-1"
+                id="banner-image"
+                type="text"
+                bind:value={formData.banner_image}
+                placeholder={$currentLanguage.config_input_placeholder_banner_image}
+                readonly
+              />
+              <button
+                type="button"
+                class="btn-secondary px-3"
+                onclick={selectBannerImage}
+              >
+                {$currentLanguage.config_input_button_text_banner_image}
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="company-logo"
+              >{$currentLanguage.config_input_label_company_logo}:</label
+            >
+            <div class="flex gap-2">
+              <input
+                class="form-input flex-1"
+                id="company-logo"
+                type="text"
+                bind:value={formData.company_logo}
+                placeholder={$currentLanguage.config_input_placeholder_company_logo}
+                readonly
+              />
+              <button
+                type="button"
+                class="btn-secondary px-3"
+                onclick={selectCompanyLogo}
+              >
+                {$currentLanguage.config_input_button_text_company_logo}
               </button>
             </div>
           </div>

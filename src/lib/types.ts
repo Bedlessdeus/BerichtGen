@@ -6,6 +6,9 @@ export interface Config {
   start_date: string;
   language: string;
   custom_language_directory: string;
+  banner_image: string;
+  company_logo: string;
+  output_format: string;
 }
 
 export interface DayEntry {

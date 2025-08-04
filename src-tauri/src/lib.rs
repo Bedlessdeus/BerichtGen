@@ -13,6 +13,11 @@ pub struct Config {
     pub company_name: String,
     pub output_directory: String,
     pub start_date: String,
+    pub language: String,
+    pub custom_language_directory: String,
+    pub banner_image: String,
+    pub company_logo: String,
+    pub output_format: String,
 }
 
 impl Default for Config {
@@ -26,6 +31,11 @@ impl Default for Config {
                 .to_string_lossy()
                 .to_string(),
             start_date: "".to_string(),
+            language: "en".to_string(),
+            custom_language_directory: "".to_string(),
+            banner_image: "".to_string(),
+            company_logo: "".to_string(),
+            output_format: "%report_number%_Report_%report_start_date%_%report_end_date%".to_string(),
         }
     }
 }

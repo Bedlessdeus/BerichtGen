@@ -161,6 +161,7 @@ BerichtGen/
 │   │   ├── types.ts                # TypeScript type definitions
 │   │   └── util.ts                 # Utility functions
 │   ├── routes/
+|   |   ├── +layout.ts
 │   │   └── +page.svelte            # Main application interface
 │   └── app.css                     # Global styles
 ├── src-tauri/

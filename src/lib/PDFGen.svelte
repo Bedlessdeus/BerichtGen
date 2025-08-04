@@ -16,6 +16,7 @@
 
   import { currentLanguage } from "../lib/store.js";
   import { translateArea, translateWeekday } from "./lang";
+  import { convertFileSrc } from "@tauri-apps/api/core";
 
   interface Props {
     weekData: WeekData;
@@ -57,11 +58,21 @@
       })
       .join("\n    ");
 
+      document.title = $config.output_format
+        .replace("%report_number%", String(trainingWeek))
+        .replace(
+          "%report_start_date%",
+          getWorkWeekDateRange(weekData.year, weekData.week).startToString().replaceAll(".", "-")
+        )
+        .replace(
+          "%report_end_date%",
+          getWorkWeekDateRange(weekData.year, weekData.week).endToString().replaceAll(".", "-")
+        );
+
     return `
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Berichtsheft Woche ${trainingWeek} (KW ${weekData.week}/${weekData.year})</title>
           <meta charset="utf-8">
           ${existingStyles}
           <style>
@@ -72,13 +83,6 @@
               line-height: 1.4 !important;
               color: #000 !important;
               background: white !important;
-              padding: 20mm !important;
-            }
-            
-            @media print {
-              body {
-                padding: 15mm !important;
-              }
             }
           </style>
         </head>
@@ -135,144 +139,149 @@
     </div>
 
     <!-- Preview Content -->
-    <div class="flex-1 overflow-auto p-6 bg-white !text-black">
+    <div class="flex-1 overflow-auto bg-white !text-black">
       <div bind:this={printContainer} class="max-w-none">
         <!-- Print Header -->
-        <div class="text-center mb-8 pb-6 border-b-2 border-gray-300">
-          <h1 class="text-3xl font-bold text-gray-800 mb-2">
-            {$currentLanguage.pdf_gen_title}
-          </h1>
-          <p class="text-lg text-gray-600">
-            {$currentLanguage.pdf_gen_subtitle_calender_week}
-            {weekData.week}/{weekData.year}
-          </p>
-        </div>
+        <header
+          class="w-full h-4 bg-no-repeat bg-cover mb-4 !p-0"
+          style="background-image: url('{convertFileSrc($config.banner_image)}');"
+        ></header>
+        <div class="pr-4 pl-4">
+          <div
+            class="justify-between flex flex-row text-left mb-8 pb-6 border-b-2 border-gray-300"
+          >
+            <h1 class="text-3xl font-bold text-gray-800 mb-2 content-center">
+              {$currentLanguage.pdf_gen_title}
+            </h1>
+            <img src="{convertFileSrc($config.company_logo)}" alt="Logo" width="150px" />
+          </div>
 
-        <!-- Info Table -->
-        <div class="mb-8">
-          <table class="w-full">
-            <thead>
-              <tr class="text-left">
-                <th class="px-4 py-3 font-semibold text-gray-700"
-                  >{$currentLanguage.pdf_gen_label_department}</th
-                >
-                <th class="px-4 py-3 font-semibold text-gray-700"
-                  >{$currentLanguage.pdf_gen_label_from}</th
-                >
-                <th class="px-4 py-3 font-semibold text-gray-700"
-                  >{$currentLanguage.pdf_gen_label_to}</th
-                >
-                <th class="px-4 py-3 font-semibold text-gray-700"
-                  >{$currentLanguage.pdf_gen_label_trainee}</th
-                >
-                <th class="px-4 py-3 font-semibold text-gray-700"
-                  >{$currentLanguage.pdf_gen_label_current_date}</th
-                >
-                <th class="px-4 py-3 font-semibold text-gray-700"
-                  >{$currentLanguage.pdf_gen_label_report_number}</th
-                >
-              </tr>
-            </thead>
-            <tbody>
-              <tr class="bg-gray-100">
-                <td class="px-4 py-3 font-medium"
-                  >{$config.department_name || "Nicht angegeben"}</td
-                >
-                <td class="px-4 py-3 font-medium"
-                  >{getWorkWeekDateRange(
-                    weekData.year,
-                    weekData.week
-                  ).startToString()}</td
-                >
-                <td class="px-4 py-3 font-medium"
-                  >{getWorkWeekDateRange(
-                    weekData.year,
-                    weekData.week
-                  ).endToString()}</td
-                >
-                <td class="px-4 py-3 font-medium"
-                  >{$config.trainee_name || "Nicht angegeben"}</td
-                >
-                <td class="px-4 py-3 font-medium"
-                  >{new Date().toLocaleDateString("de-DE", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  })}</td
-                >
-                <td class="px-4 py-3 font-medium"
-                  >{calculateTrainingWeekNumber(
-                    $config.start_date,
-                    weekData.year,
-                    weekData.week
-                  )}</td
-                >
-              </tr>
-            </tbody>
-          </table>
-        </div>
+          <!-- Info Table -->
+          <div class="mb-8">
+            <table class="w-full">
+              <thead class="border-b-[1px] border-black">
+                <tr class="text-left">
+                  <th class="px-4 py-3 font-semibold text-gray-700"
+                    >{$currentLanguage.pdf_gen_label_department}</th
+                  >
+                  <th class="px-4 py-3 font-semibold text-gray-700"
+                    >{$currentLanguage.pdf_gen_label_from}</th
+                  >
+                  <th class="px-4 py-3 font-semibold text-gray-700"
+                    >{$currentLanguage.pdf_gen_label_to}</th
+                  >
+                  <th class="px-4 py-3 font-semibold text-gray-700"
+                    >{$currentLanguage.pdf_gen_label_trainee}</th
+                  >
+                  <th class="px-4 py-3 font-semibold text-gray-700"
+                    >{$currentLanguage.pdf_gen_label_current_date}</th
+                  >
+                  <th class="px-4 py-3 font-semibold text-gray-700"
+                    >{$currentLanguage.pdf_gen_label_report_number}</th
+                  >
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="bg-gray-100">
+                  <td class="px-4 py-3 font-medium"
+                    >{$config.department_name || "Nicht angegeben"}</td
+                  >
+                  <td class="px-4 py-3 font-medium"
+                    >{getWorkWeekDateRange(
+                      weekData.year,
+                      weekData.week
+                    ).startToString()}</td
+                  >
+                  <td class="px-4 py-3 font-medium"
+                    >{getWorkWeekDateRange(
+                      weekData.year,
+                      weekData.week
+                    ).endToString()}</td
+                  >
+                  <td class="px-4 py-3 font-medium"
+                    >{$config.trainee_name || "Nicht angegeben"}</td
+                  >
+                  <td class="px-4 py-3 font-medium"
+                    >{new Date().toLocaleDateString("de-DE", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })}</td
+                  >
+                  <td class="px-4 py-3 font-medium"
+                    >{calculateTrainingWeekNumber(
+                      $config.start_date,
+                      weekData.year,
+                      weekData.week
+                    )}</td
+                  >
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-        <!-- Days -->
-        <div class="space-y-6 mb-12">
-          {#each Object.entries(weekMap) as [area, entries]}
-            <div>
-              <h3
-                class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-blue-500"
-              >
-                {translateArea(area, $currentLanguage)}
-              </h3>
-              <div class="space-y-3">
-                {#each entries as entry}
-                  <div class="p-4">
-                    <div class="flex justify-between items-center mb-3">
-                      <h4 class="font-semibold text-gray-800">
-                        {translateWeekday(
-                          new Date(entry.date).toLocaleDateString("en-US", {
-                            weekday: "long",
-                          }),
-                          $currentLanguage
-                        )}
-                      </h4>
-                      <span class="text-sm font-medium text-gray-600">
-                        {formatDateToGerman(entry.date)}
-                      </span>
+          <!-- Days -->
+          <div class="space-y-6 mb-12">
+            {#each Object.entries(weekMap) as [area, entries]}
+              <div>
+                <h3
+                  class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-blue-500"
+                >
+                  {translateArea(area, $currentLanguage)}
+                </h3>
+                <div class="space-y-3">
+                  {#each entries as entry}
+                    <div class="p-4">
+                      <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-semibold text-gray-800">
+                          {translateWeekday(
+                            new Date(entry.date).toLocaleDateString("en-US", {
+                              weekday: "long",
+                            }),
+                            $currentLanguage
+                          )}
+                        </h4>
+                        <span class="text-sm font-medium text-gray-600">
+                          {formatDateToGerman(entry.date)}
+                        </span>
+                      </div>
+                      <div class="text-gray-700 leading-relaxed">
+                        <p class="whitespace-pre-wrap">{entry.notes}</p>
+                      </div>
                     </div>
-                    <div class="text-gray-700 leading-relaxed">
-                      <p class="whitespace-pre-wrap">{entry.notes}</p>
-                    </div>
+                  {/each}
+                </div>
+              </div>
+            {/each}
+          </div>
+
+          <!-- Signature Section -->
+          <div class="mt-16">
+            <div class="bg-gray-100 p-8">
+              <div class="grid grid-cols-3 gap-16">
+                <div class="text-center">
+                  <div class="h-16 mb-2"></div>
+                  <div class="border-t border-gray-400 pt-2">
+                    <p class="text-sm font-medium text-gray-700">
+                      {$currentLanguage.pdf_gen_label_signature_trainer}
+                    </p>
                   </div>
-                {/each}
-              </div>
-            </div>
-          {/each}
-        </div>
-
-        <!-- Signature Section -->
-        <div class="mt-16">
-          <div class="bg-gray-100 p-8">
-            <div class="grid grid-cols-3 gap-16">
-              <div class="text-center">
-                <div class="h-16 mb-2"></div>
-                <div class="border-t border-gray-400 pt-2">
-                  <p class="text-sm font-medium text-gray-700">
-                    {$currentLanguage.pdf_gen_label_signature_trainer}
-                  </p>
                 </div>
-              </div>
-              <div class="text-center">
-                <div class="h-16 mb-2"></div>
-                <div class="border-t border-gray-400 pt-2">
-                  <p class="text-sm font-medium text-gray-700">
-                    {$currentLanguage.pdf_gen_label_signature_trainee}
-                  </p>
+                <div class="text-center">
+                  <div class="h-16 mb-2"></div>
+                  <div class="border-t border-gray-400 pt-2">
+                    <p class="text-sm font-medium text-gray-700">
+                      {$currentLanguage.pdf_gen_label_signature_trainee}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div class="text-center">
-                <div class="h-16 mb-2"></div>
-                <div class="border-t border-gray-400 pt-2">
-                  <p class="text-sm font-medium text-gray-700">
-                    {$currentLanguage.pdf_gen_label_signature_guardian}
-                  </p>
+                <div class="text-center">
+                  <div class="h-16 mb-2"></div>
+                  <div class="border-t border-gray-400 pt-2">
+                    <p class="text-sm font-medium text-gray-700">
+                      {$currentLanguage.pdf_gen_label_signature_guardian}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -285,9 +294,6 @@
     <div
       class="border-t border-gray-200 dark:border-gray-700 p-6 flex justify-between items-center"
     >
-      <!--<div class="text-sm text-gray-600 dark:text-gray-400">
-        Tipp: Verwenden Sie Strg+P zum schnellen Drucken
-      </div>-->
       <div></div>
       <div class="flex gap-3">
         <button class="btn-primary" onclick={onClose}>
@@ -295,9 +301,6 @@
         </button>
         <button class="btn-primary" onclick={handleSavePDF}>
           {$currentLanguage.pdf_preview_button_save_text}
-        </button>
-        <button class="btn-primary" disabled>
-          {$currentLanguage.pdf_preview_button_print_text}
         </button>
       </div>
     </div>

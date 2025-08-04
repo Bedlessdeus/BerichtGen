@@ -11,6 +11,9 @@ export const config = writable<Config>({
   start_date: "",
   language: "en",
   custom_language_directory: "",
+  banner_image: "",
+  company_logo: "",
+  output_format: "%report_number%_Report_%report_start_date%_%report_end_date%",
 });
 
 export const currentLanguage = derived(

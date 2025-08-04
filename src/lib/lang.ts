@@ -1,5 +1,3 @@
-import type { AreaType, Weekday } from "./types";
-
 export type Language = {
   monday_text: string;
   tuesday_text: string;
@@ -45,6 +43,16 @@ export type Language = {
   config_input_placeholder_custom_language_directory: string;
   config_input_button_text_custom_language_directory: string;
 
+  config_input_label_output_format: string;
+
+  config_input_label_banner_image: string;
+  config_input_placeholder_banner_image: string;
+  config_input_button_text_banner_image: string;
+
+  config_input_label_company_logo: string;
+  config_input_placeholder_company_logo: string;
+  config_input_button_text_company_logo: string;
+
   config_button_save_text: string;
   config_button_save_text_saving: string;
   config_button_cancel_text: string;
@@ -74,7 +82,6 @@ export type Language = {
   pdf_preview_button_print_text: string;
 
   pdf_gen_title: string;
-  pdf_gen_subtitle_calender_week: string;
 
   pdf_gen_label_department: string;
   pdf_gen_label_from: string;
@@ -140,6 +147,16 @@ export const EN: Language = {
     "Select custom language directory",
   config_input_button_text_custom_language_directory: "Browse",
 
+  config_input_label_output_format: "Output Format",
+
+  config_input_label_banner_image: "Banner Image",
+  config_input_placeholder_banner_image: "Select banner image",
+  config_input_button_text_banner_image: "Browse",
+
+  config_input_label_company_logo: "Company Logo",
+  config_input_placeholder_company_logo: "Select company logo",
+  config_input_button_text_company_logo: "Browse",
+
   config_button_save_text: "Save",
   config_button_save_text_saving: "Saving...",
 
@@ -173,7 +190,6 @@ export const EN: Language = {
   pdf_preview_button_print_text: "Print",
 
   pdf_gen_title: "Report Book",
-  pdf_gen_subtitle_calender_week: "Calendar Week",
   pdf_gen_label_department: "Department",
   pdf_gen_label_from: "From",
   pdf_gen_label_to: "To",
@@ -239,6 +255,16 @@ export const DE: Language = {
     "Benutzerdefinierte Sprachenverzeichnis auswählen",
   config_input_button_text_custom_language_directory: "Durchsuchen",
 
+  config_input_label_output_format: "Ausgabeformat",
+
+  config_input_label_banner_image: "Banner Bild",
+  config_input_placeholder_banner_image: "Banner Bild auswählen",
+  config_input_button_text_banner_image: "Durchsuchen",
+
+  config_input_label_company_logo: "Firmenlogo",
+  config_input_placeholder_company_logo: "Firmenlogo auswählen",
+  config_input_button_text_company_logo: "Durchsuchen",
+
   config_button_save_text: "Speichern",
   config_button_save_text_saving: "Speichere...",
 
@@ -273,7 +299,6 @@ export const DE: Language = {
   pdf_preview_button_print_text: "Drucken",
 
   pdf_gen_title: "Ausbildungsnachweis",
-  pdf_gen_subtitle_calender_week: "Kalenderwoche",
   pdf_gen_label_department: "GB/Werk/Abt",
   pdf_gen_label_from: "Von",
   pdf_gen_label_to: "Bis",
@@ -284,6 +309,7 @@ export const DE: Language = {
   pdf_gen_label_signature_trainee: "Unterschrift Auszubildender",
   pdf_gen_label_signature_guardian: "Unterschrift Erziehungsberechtigter",
 };
+
 
 export const AVAILABLE_LANGUAGES = {
   en: { code: "en", name: "English", data: EN },
@@ -374,6 +400,13 @@ const validateLanguageData = (data: any): boolean => {
     "config_input_label_custom_language_directory",
     "config_input_placeholder_custom_language_directory",
     "config_input_button_text_custom_language_directory",
+    "config_input_label_output_format",
+    "config_input_label_banner_image",
+    "config_input_placeholder_banner_image",
+    "config_input_button_text_banner_image",
+    "config_input_label_company_logo",
+    "config_input_placeholder_company_logo",
+    "config_input_button_text_company_logo",
     "config_button_save_text",
     "config_button_save_text_saving",
     "config_button_cancel_text",
@@ -397,7 +430,6 @@ const validateLanguageData = (data: any): boolean => {
     "pdf_preview_button_save_text",
     "pdf_preview_button_print_text",
     "pdf_gen_title",
-    "pdf_gen_subtitle_calender_week",
     "pdf_gen_label_department",
     "pdf_gen_label_from",
     "pdf_gen_label_to",
