@@ -1,81 +1,67 @@
-name: Release Tauri App
+name: 'publish'
 
 on:
+  workflow_dispatch:
   push:
-    tags:
-      - "v*" # only run on tags like v1.0.0
-
-permissions:
-  contents: write
-
+    branches:
+      - release
 
 jobs:
-  build:
+  publish-tauri:
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest]
+        include:
+          - platform: 'macos-latest' # for Arm based macs (M1 and above).
+            args: '--target aarch64-apple-darwin'
+          - platform: 'macos-latest' # for Intel based macs.
+            args: '--target x86_64-apple-darwin'
+          - platform: 'ubuntu-22.04'
+            args: ''
+          - platform: 'ubuntu-22.04-arm' # Only available in public repos.
+            args: ''
+          - platform: 'windows-latest'
+            args: ''
 
     runs-on: ${{ matrix.platform }}
-
     steps:
-      # Checkout repo
       - uses: actions/checkout@v4
 
-      # Setup Bun
+      - name: install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      
       - uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
 
-      # Setup Rust
-      - uses: dtolnay/rust-toolchain@stable
-
-      # Cache Rust + Bun deps
-      - uses: actions/cache@v4
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable # Set this to dtolnay/rust-toolchain@nightly
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ~/.bun/install/cache
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('**/bun.lockb') }}
+          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      # Install dependencies
-      - name: Install dependencies
-        run: bun install
-
-      # Build Tauri app
-      - name: Build Tauri app
-        run: bun run tauri build
-
-      # Rename artifacts with version + platform
-      - name: Rename artifacts
-        run: |
-          VERSION=${GITHUB_REF_NAME} # e.g. v1.0.0
-          OUTDIR=src-tauri/target/release/bundle
-          mkdir -p dist
-          for f in $(find $OUTDIR -type f); do
-            fname=$(basename "$f")
-            cp "$f" "dist/${fname%%.*}-${VERSION}-${{ matrix.platform }}.${fname##*.}"
-          done
-
-      # Upload artifacts for each platform
-      - uses: actions/upload-artifact@v4
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
         with:
-          name: tauri-${{ matrix.platform }}-${{ github.ref_name }}
-          path: dist/*
+          workspaces: './src-tauri -> target'
 
-  release:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      # Download all artifacts
-      - uses: actions/download-artifact@v4
-        with:
-          path: dist
+      - name: install frontend dependencies
+        # If you don't have `beforeBuildCommand` configured you may want to build your frontend here too.
+        run: bun install # change this to npm or pnpm depending on which one you use.
 
-      # Create GitHub Release and upload files
-      - uses: softprops/action-gh-release@v2
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
-          files: dist/**/*
+          tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+          releaseName: 'App v__VERSION__'
+          releaseBody: 'See the assets to download this version and install.'
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
