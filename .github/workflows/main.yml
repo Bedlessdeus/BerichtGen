@@ -5,6 +5,10 @@ on:
     tags:
       - "v*" # only run on tags like v1.0.0
 
+permissions:
+  contents: write
+
+
 jobs:
   build:
     strategy:
